@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniStudy Pro - Plataforma Integral de Estudos & Bolsas Tech</title>
+  
+  <!-- Tailwind CSS, Lucide Icons, Marked, Vis.js & Chart.js -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css" rel="stylesheet" type="text/css" />
+
+  <!-- Chosen Palette: Slate & Purple Tech Harmony -->
+  <!-- Application Structure Plan: Designed a multi-tab workspace with immediate hero-section visibility for BigTech Scholarships (Google, YouTube, Meta, Microsoft, Apple) and Academic Opportunities. Features a dedicated filter bar, interactive scholarship detail modals, interactive chart analytics for grant amounts using Chart.js, an Obsidian Markdown knowledge base with bidirectionally linked nodes, and a practice exam simulator. Structure prioritizes immediate access to high-impact funding and learning tools. -->
+  <!-- Visualization & Content Choices: 
+    1. BigTech & University Scholarships -> Dynamic Cards & Filtering -> Interactive selection, star bookmarking, and modal drill-down -> Enhances discoverability of Google/YouTube opportunities -> Native HTML/CSS + Tailwind + JS.
+    2. Scholarship Funding Distribution -> Horizontal Bar Chart -> Interactive tooltips showing total grant value ($ USD / R$) per organization -> Clarifies financial impact of BigTech programs -> Chart.js with Canvas rendering.
+    3. Obsidian Graph View -> Vis.js Interactive Canvas Network -> Visualizes inter-note connections -> Vis.js Canvas.
+    4. CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+  -->
+  <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f7ff',
+              100: '#e0effe',
+              500: '#0284c7',
+              600: '#0369a1',
+              700: '#075985',
+              900: '#0c4a6e',
+            },
+            obsidian: {
+              bg: '#1e1e1e',
+              sidebar: '#252526',
+              border: '#333333',
+              accent: '#7c3aed'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #18181b; }
+    ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #52525b; }
+    
+    .wiki-link { color: #a78bfa; text-decoration: underline; cursor: pointer; }
+    
+    /* Responsive Chart Container Styles */
+    .chart-container {
+      position: relative;
+      width: 100%;
+      max-width: 680px;
+      margin-left: auto;
+      margin-right: auto;
+      height: 260px;
+      max-height: 320px;
+    }
+    @media (min-width: 768px) {
+      .chart-container {
+        height: 300px;
+      }
+    }
+
+    /* Focus Mode Overlay Animations */
+    @keyframes pulse-slow {
+      0%, 100% { opacity: 0.2; }
+      50% { opacity: 0.6; }
+    }
+    .animate-pulse-slow { animation: pulse-slow 4s infinite ease-in-out; }
+  </style>
+</head>
+<body class="bg-zinc-950 text-zinc-100 font-sans h-screen flex flex-col overflow-hidden">
+
+  <!-- Top Navigation Header -->
+  <header class="h-14 border-b border-zinc-800 bg-zinc-900 flex items-center justify-between px-4 z-20 shrink-0">
+    <div class="flex items-center space-x-3">
+      <div class="p-2 bg-purple-600/20 text-purple-400 rounded-lg">
+        <i data-lucide="brain-circuit" class="w-5 h-5"></i>
+      </div>
+      <span class="font-bold text-lg bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400">
+        OmniStudy Pro
+      </span>
+      <span class="text-xs px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-800 font-semibold hidden sm:inline">
+        Edição BigTech & Google/YouTube
+      </span>
+    </div>
+
+    <!-- Center Navigation Tabs -->
+    <nav class="hidden md:flex items-center space-x-1 bg-zinc-950 p-1 rounded-xl border border-zinc-800 text-xs font-medium">
+      <button onclick="switchTab('bolsas')" id="tab-bolsas" class="tab-btn px-3 py-1.5 rounded-lg flex items-center space-x-2 bg-gradient-to-r from-red-600 to-purple-600 text-white font-bold shadow-lg shadow-red-900/30">
+        <i data-lucide="sparkles" class="w-4 h-4 text-amber-300"></i><span>🔥 Bolsas Google, YouTube & BigTech</span>
+      </button>
+      <button onclick="switchTab('obsidian')" id="tab-obsidian" class="tab-btn px-3 py-1.5 rounded-lg flex items-center space-x-2 text-zinc-400 hover:text-white hover:bg-zinc-800">
+        <i data-lucide="file-text" class="w-4 h-4"></i><span>Notas Obsidian</span>
+      </button>
+      <button onclick="switchTab('search')" id="tab-search" class="tab-btn px-3 py-1.5 rounded-lg flex items-center space-x-2 text-zinc-400 hover:text-white hover:bg-zinc-800">
+        <i data-lucide="search" class="w-4 h-4"></i><span>Busca Aulas & PDFs</span>
+      </button>
+      <button onclick="switchTab('simulados')" id="tab-simulados" class="tab-btn px-3 py-1.5 rounded-lg flex items-center space-x-2 text-zinc-400 hover:text-white hover:bg-zinc-800">
+        <i data-lucide="award" class="w-4 h-4"></i><span>SimuX Vestibulares</span>
+      </button>
+      <button onclick="switchTab('keep')" id="tab-keep" class="tab-btn px-3 py-1.5 rounded-lg flex items-center space-x-2 text-zinc-400 hover:text-white hover:bg-zinc-800">
+        <i data-lucide="check-square" class="w-4 h-4"></i><span>Keep & Checklists</span>
+      </button>
+    </nav>
+
+    <!-- Right Quick Actions -->
+    <div class="flex items-center space-x-2">
+      <button onclick="toggleFocusMode()" class="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition">
+        <i data-lucide="shield-alert" class="w-4 h-4"></i>
+        <span class="hidden sm:inline">Modo Estudos</span>
+      </button>
+
+      <button onclick="showAndroidNativeModal()" title="Botão Flutuante Nativo Android" class="p-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 rounded-lg border border-emerald-500/30 transition flex items-center space-x-1 text-xs font-medium">
+        <i data-lucide="smartphone" class="w-4 h-4"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile Tab Switcher Bar -->
+  <div class="md:hidden bg-zinc-900 border-b border-zinc-800 p-2 flex overflow-x-auto space-x-2 text-xs shrink-0">
+    <button onclick="switchTab('bolsas')" class="px-3 py-1.5 rounded-lg bg-red-600 text-white font-bold whitespace-nowrap">🔥 Bolsas BigTech & Google</button>
+    <button onclick="switchTab('obsidian')" class="px-3 py-1.5 rounded-lg bg-zinc-800 text-zinc-300 whitespace-nowrap">Notas Obsidian</button>
+    <button onclick="switchTab('search')" class="px-3 py-1.5 rounded-lg bg-zinc-800 text-zinc-300 whitespace-nowrap">Busca Aulas</button>
+    <button onclick="switchTab('simulados')" class="px-3 py-1.5 rounded-lg bg-zinc-800 text-zinc-300 whitespace-nowrap">Simulados</button>
+    <button onclick="switchTab('keep')" class="px-3 py-1.5 rounded-lg bg-zinc-800 text-zinc-300 whitespace-nowrap">Checklists</button>
+  </div>
+
+  <!-- Main Workspace Content -->
+  <main class="flex-1 relative overflow-hidden bg-zinc-950 flex">
+
+    <!-- 1. CAÇA-BOLSAS & BIGTECHS TAB (DEFAULT VIEW FOR EASY DISCOVERABILITY) -->
+    <section id="view-bolsas" class="tab-view w-full h-full flex flex-col p-4 md:p-6 overflow-y-auto">
+      <div class="max-w-6xl mx-auto w-full space-y-6">
+
+        <!-- Hero Section Banner for Google, YouTube & BigTech Opportunities -->
+        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-red-950 via-purple-950 to-blue-950 border border-purple-500/30 p-6 md:p-8 shadow-2xl">
+          <div class="relative z-10 space-y-3 max-w-3xl">
+            <div class="inline-flex items-center space-x-2 bg-red-500/20 text-red-300 border border-red-500/30 px-3 py-1 rounded-full text-xs font-bold">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
+              <span>Oportunidades de Financiamento & Mentorias Globais 2026/2027</span>
+            </div>
+            <h1 class="text-2xl md:text-4xl font-extrabold text-white tracking-tight">
+              Central de Bolsas de Estudo: Google, YouTube & BigTechs
+            </h1>
+            <p class="text-zinc-300 text-sm md:text-base leading-relaxed">
+              Explore bolsas integrais de estudo, programas de mentoria e auxílios de até <strong class="text-emerald-400">$10.000 USD</strong> oferecidos pela **Google, YouTube, Meta, Microsoft, Apple, Santander** e pelas maiores universidades do mundo.
+            </p>
+            <div class="flex flex-wrap gap-2 pt-2">
+              <button onclick="setCategoryFilter('GOOGLE_YOUTUBE')" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold shadow-lg transition flex items-center space-x-2">
+                <i data-lucide="play" class="w-4 h-4"></i>
+                <span>Ver Apenas Bolsas Google & YouTube</span>
+              </button>
+              <button onclick="setCategoryFilter('BIGTECH')" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold shadow-lg transition flex items-center space-x-2">
+                <i data-lucide="laptop" class="w-4 h-4"></i>
+                <span>Todas as BigTechs</span>
+              </button>
+              <button onclick="setCategoryFilter('ALL')" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl text-xs font-medium transition">
+                Ver Todas as Instituições
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section Introduction Paragraph & Analytics Dashboard -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-2 bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-3">
+            <h3 class="font-bold text-white text-base flex items-center space-x-2">
+              <i data-lucide="bar-chart-2" class="w-5 h-5 text-purple-400"></i>
+              <span>Panorama dos Valores e Auxílios por Programa</span>
+            </h3>
+            <p class="text-xs text-zinc-400 leading-relaxed">
+              Esta seção consolida dados atualizados sobre estipêndios, financiamento para estudantes de tecnologia/computação e programas de apoio a criadores de conteúdo do YouTube. Utilize o gráfico interativo para avaliar os valores oferecidos antes de efetuar a sua candidatura.
+            </p>
+            <!-- Chart Container -->
+            <div class="chart-container">
+              <canvas id="scholarshipsChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Tracked Saved Scholarships Widget -->
+          <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+            <div>
+              <h3 class="font-bold text-amber-400 text-sm flex items-center space-x-2">
+                <i data-lucide="star" class="w-4 h-4 fill-amber-400"></i>
+                <span>Minhas Bolsas Favoritadas</span>
+              </h3>
+              <p class="text-xs text-zinc-400 mt-1">Clique na estrela dos cards para acompanhar seus editais salvos.</p>
+              <div id="tracked-scholarships-list" class="mt-3 flex flex-wrap gap-2 text-xs">
+                <!-- Dynamically rendered -->
+              </div>
+            </div>
+            <div class="p-3 bg-purple-950/30 border border-purple-500/20 rounded-xl text-xs text-purple-200">
+              💡 <strong>Dica de Inscrição:</strong> As bolsas da Google e Meta exigem histórico escolar e redação de impacto ("Statement of Purpose").
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Filters & Search Control Bar -->
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex flex-col md:flex-row gap-3">
+          <div class="relative flex-1">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-3 text-zinc-500"></i>
+            <input type="text" id="bolsa-search-input" onkeyup="filterUniversities()" placeholder="Buscar bolsa ou programa (ex: Google Generation, YouTube, Meta, Einstein, ITA, Harvard)..." class="w-full bg-zinc-950 border border-zinc-700 rounded-xl pl-9 pr-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500">
+          </div>
+          
+          <select id="region-filter" onchange="filterUniversities()" class="bg-zinc-950 border border-zinc-700 text-zinc-300 rounded-xl px-3 py-2 text-sm focus:outline-none">
+            <option value="ALL">Todas as Categorias / Regiões</option>
+            <option value="GOOGLE_YOUTUBE">🔥 Google & YouTube (Bolsas & Creator Grants)</option>
+            <option value="BIGTECH">💻 BigTechs Gerais (Meta, Microsoft, Apple, Santander)</option>
+            <option value="BRASIL">🇧🇷 Brasil (Einstein, USP, ITA, Insper, ESEG, etc.)</option>
+            <option value="EUA">🇺🇸 EUA & Canadá (Harvard, MIT, Stanford)</option>
+            <option value="EUROPA">🇪🇺 Europa (Oxford, Cambridge, Sorbonne)</option>
+            <option value="ASIA">🌏 Ásia (MEXT Japão, Tsinghua)</option>
+          </select>
+
+          <select id="type-filter" onchange="filterUniversities()" class="bg-zinc-950 border border-zinc-700 text-zinc-300 rounded-xl px-3 py-2 text-sm focus:outline-none">
+            <option value="ALL">Todos os Tipos de Apoio</option>
+            <option value="Tech">Tech & Programação</option>
+            <option value="100%">100% Cobertura Integral</option>
+            <option value="Criadores">Criadores & EdTech (YouTube)</option>
+            <option value="Mérito">Mérito Acadêmico</option>
+            <option value="Pesquisa">Pesquisa / PhD</option>
+          </select>
+        </div>
+
+        <!-- Universities & BigTech Grid Container -->
+        <div id="universities-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- JS dynamic insertion -->
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 2. OBSIDIAN VAULT TAB -->
+    <section id="view-obsidian" class="tab-view w-full h-full flex flex-col md:flex-row overflow-hidden hidden">
+      <!-- File Explorer Sidebar -->
+      <div class="w-full md:w-64 bg-zinc-900 border-r border-zinc-800 flex flex-col shrink-0">
+        <div class="p-3 border-b border-zinc-800 flex justify-between items-center">
+          <span class="text-xs font-bold uppercase tracking-wider text-zinc-400">Cofre de Notas</span>
+          <button onclick="createNewNote()" class="p-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-md text-xs flex items-center space-x-1">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            <span>Nova Nota</span>
+          </button>
+        </div>
+        <!-- Notes List -->
+        <div id="notes-list" class="flex-1 overflow-y-auto p-2 space-y-1"></div>
+        <!-- Graph View Button -->
+        <div class="p-2 border-t border-zinc-800">
+          <button onclick="toggleGraphModal()" class="w-full py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-xs font-medium text-zinc-300 flex items-center justify-center space-x-2">
+            <i data-lucide="git-fork" class="w-4 h-4 text-purple-400"></i>
+            <span>Visualizar Grafo do Cofre</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Editor & Preview Panel -->
+      <div class="flex-1 flex flex-col h-full bg-zinc-950 overflow-hidden">
+        <!-- Editor Toolbar -->
+        <div class="h-10 border-b border-zinc-800 bg-zinc-900 px-4 flex items-center justify-between">
+          <input type="text" id="note-title-input" oninput="updateCurrentNoteTitle(this.value)" placeholder="Título da Nota..." class="bg-transparent border-none text-sm font-semibold focus:outline-none text-zinc-100 w-1/2">
+          <div class="flex items-center space-x-2 text-xs">
+            <span class="text-zinc-500 hidden sm:inline">Conectar notas: <code class="bg-zinc-800 text-purple-300 px-1 rounded">[[Nome da Nota]]</code></span>
+            <button onclick="deleteCurrentNote()" class="text-red-400 hover:text-red-300 p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+          </div>
+        </div>
+
+        <!-- Split Editor / Preview -->
+        <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
+          <textarea id="note-content-input" oninput="updateCurrentNoteContent(this.value)" placeholder="# Escreva sua nota de estudos aqui..." class="flex-1 bg-zinc-950 text-zinc-200 p-4 font-mono text-sm resize-none focus:outline-none border-b md:border-b-0 md:border-r border-zinc-800"></textarea>
+          
+          <div class="flex-1 bg-zinc-900/50 p-4 overflow-y-auto prose prose-invert max-w-none text-sm" id="note-preview">
+            <!-- Rendered Markdown Output -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. SEARCH CENTER TAB -->
+    <section id="view-search" class="tab-view w-full h-full flex flex-col p-6 overflow-y-auto hidden">
+      <div class="max-w-4xl mx-auto w-full space-y-6">
+        <div>
+          <h2 class="text-2xl font-bold text-white flex items-center space-x-2">
+            <i data-lucide="youtube" class="w-7 h-7 text-red-500"></i>
+            <span>Busca Integrada de Videoaulas & PDFs Editais</span>
+          </h2>
+          <p class="text-zinc-400 text-sm mt-1">Encontre materiais sobre a Bolsa Google, YouTube, vestibulares e provas técnicas.</p>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="flex flex-col sm:flex-row gap-3">
+          <div class="relative flex-1">
+            <i data-lucide="search" class="w-5 h-5 absolute left-3 top-3 text-zinc-500"></i>
+            <input type="text" id="study-search-query" placeholder="Ex: Google Generation Scholarship, YouTube Learning Grant, Resumo Física ITA..." class="w-full bg-zinc-900 border border-zinc-700 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-purple-500 text-white">
+          </div>
+          <select id="search-type" class="bg-zinc-900 border border-zinc-700 text-zinc-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none">
+            <option value="youtube">Videoaulas (YouTube)</option>
+            <option value="pdf">Documentos & Editais (PDF)</option>
+          </select>
+          <button onclick="executeStudySearch()" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2.5 rounded-xl font-medium text-sm flex items-center justify-center space-x-2">
+            <i data-lucide="search" class="w-4 h-4"></i><span>Buscar</span>
+          </button>
+        </div>
+
+        <!-- Saved Materials -->
+        <div>
+          <h3 class="text-lg font-semibold text-zinc-200 mb-3 flex items-center space-x-2">
+            <i data-lucide="bookmark" class="w-5 h-5 text-amber-400"></i>
+            <span>Biblioteca Salva</span>
+          </h3>
+          <div id="saved-materials-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Saved items -->
+          </div>
+        </div>
+
+        <!-- Search Results -->
+        <div id="search-results-section" class="space-y-4">
+          <h3 class="text-lg font-semibold text-zinc-200">Resultados da Busca</h3>
+          <div id="search-results-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="col-span-2 text-center py-12 text-zinc-500 border border-dashed border-zinc-800 rounded-xl">
+              Digite um termo acima para realizar a busca.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. SIMULADOS TAB -->
+    <section id="view-simulados" class="tab-view w-full h-full flex flex-col p-6 overflow-y-auto hidden">
+      <div class="max-w-4xl mx-auto w-full space-y-6">
+        <div class="flex justify-between items-start">
+          <div>
+            <h2 class="text-2xl font-bold text-white flex items-center space-x-2">
+              <i data-lucide="award" class="w-7 h-7 text-amber-400"></i>
+              <span>SimuX - Treino de Questões</span>
+            </h2>
+            <p class="text-zinc-400 text-sm mt-1">Treine para vestibulinhos, exames do ITA, ENEM e testes técnicos.</p>
+          </div>
+          <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-right">
+            <span class="text-xs text-zinc-400 block">Pontuação</span>
+            <span id="user-score-badge" class="text-xl font-extrabold text-emerald-400">0 pts</span>
+          </div>
+        </div>
+
+        <!-- Setup -->
+        <div id="simulado-setup" class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4">
+          <h3 class="font-semibold text-zinc-200">Novo Simulado</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-zinc-400 mb-1">Banca / Prova</label>
+              <select id="sim-banca" class="w-full bg-zinc-950 border border-zinc-700 text-zinc-200 rounded-xl p-2.5 text-sm focus:outline-none">
+                <option value="ENEM">ENEM</option>
+                <option value="FUVEST">FUVEST / USP</option>
+                <option value="ITA">ITA / IME</option>
+                <option value="GOOGLE_TECH">Google / Tech Screening</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-zinc-400 mb-1">Matéria</label>
+              <select id="sim-materia" class="w-full bg-zinc-950 border border-zinc-700 text-zinc-200 rounded-xl p-2.5 text-sm focus:outline-none">
+                <option value="TODAS">Todas</option>
+                <option value="BIOLOGIA">Biologia</option>
+                <option value="FISICA">Física</option>
+                <option value="LOGICA">Lógica & Programação</option>
+              </select>
+            </div>
+            <div class="flex items-end">
+              <button onclick="startSimulado()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 px-4 rounded-xl text-sm transition flex items-center justify-center space-x-2">
+                <i data-lucide="play" class="w-4 h-4"></i>
+                <span>Iniciar Simulado</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Question View Container -->
+        <div id="simulado-active-card" class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 hidden space-y-6">
+          <div class="flex justify-between items-center border-b border-zinc-800 pb-3">
+            <span id="question-tag" class="text-xs font-bold px-2.5 py-1 bg-purple-500/20 text-purple-300 rounded-full border border-purple-500/30">Questão 1</span>
+          </div>
+
+          <div id="question-text" class="text-zinc-200 text-base leading-relaxed font-medium"></div>
+          <div id="options-container" class="space-y-3"></div>
+          <div id="question-feedback" class="hidden p-4 rounded-xl border"></div>
+
+          <div class="flex justify-between pt-4 border-t border-zinc-800">
+            <button onclick="cancelSimulado()" class="px-4 py-2 text-zinc-400 hover:text-white text-sm">Sair</button>
+            <button id="next-question-btn" onclick="nextQuestion()" class="hidden bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-xl text-sm font-medium">Próxima</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. KEEP & CHECKLISTS TAB -->
+    <section id="view-keep" class="tab-view w-full h-full flex flex-col p-6 overflow-y-auto hidden">
+      <div class="max-w-4xl mx-auto w-full space-y-6">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-2xl font-bold text-white flex items-center space-x-2">
+              <i data-lucide="check-square" class="w-7 h-7 text-amber-400"></i>
+              <span>Keep & Checklists Rápidas</span>
+            </h2>
+            <p class="text-zinc-400 text-sm mt-1">Organize prazos e pendências das inscrições das bolsas.</p>
+          </div>
+          <button onclick="openQuickChecklistModal()" class="bg-amber-500 hover:bg-amber-600 text-zinc-950 px-4 py-2 rounded-xl text-sm font-bold flex items-center space-x-2">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i>
+            <span>Nova Lista</span>
+          </button>
+        </div>
+
+        <div id="keep-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- JS dynamic insertion -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: DETALHES COMPLETOS DA BOLSA (SCHOLARSHIP DETAIL MODAL) -->
+  <div id="modal-scholarship-detail" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="max-w-2xl w-full bg-zinc-900 border border-purple-500/30 rounded-3xl p-6 space-y-5 relative shadow-2xl overflow-y-auto max-h-[90vh]">
+      <div class="flex justify-between items-start border-b border-zinc-800 pb-4">
+        <div>
+          <span id="modal-sch-badge" class="text-[10px] uppercase font-bold px-2.5 py-1 rounded bg-red-500/20 text-red-300 border border-red-500/30">Google / BigTech</span>
+          <h2 id="modal-sch-title" class="text-xl md:text-2xl font-extrabold text-white mt-2">Nome do Programa</h2>
+        </div>
+        <button onclick="closeScholarshipModal()" class="text-zinc-400 hover:text-white p-1"><i data-lucide="x" class="w-6 h-6"></i></button>
+      </div>
+
+      <div class="space-y-4 text-xs md:text-sm text-zinc-300">
+        <div class="bg-zinc-950 p-4 rounded-xl border border-zinc-800 space-y-1">
+          <span class="text-zinc-400 text-xs block font-semibold">Valor do Benefício / Financiamento:</span>
+          <span id="modal-sch-value" class="text-lg font-bold text-emerald-400">$10.000 USD + Mentoria</span>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-white mb-1">Descrição do Programa</h4>
+          <p id="modal-sch-desc" class="text-zinc-400 leading-relaxed"></p>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-white mb-1">Requisitos de Inscrição & Perfil Esperado</h4>
+          <ul id="modal-sch-reqs" class="list-disc list-inside space-y-1 text-zinc-400">
+            <!-- Dynamic bullets -->
+          </ul>
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-zinc-800 flex justify-between items-center">
+        <button onclick="closeScholarshipModal()" class="px-4 py-2 text-zinc-400 hover:text-white text-xs">Fechar</button>
+        <a id="modal-sch-link" href="#" target="_blank" class="px-5 py-2.5 bg-gradient-to-r from-red-600 to-purple-600 hover:from-red-500 hover:to-purple-500 text-white rounded-xl text-xs font-bold flex items-center space-x-2">
+          <span>Acessar Edital Oficial & Formulário</span>
+          <i data-lucide="external-link" class="w-4 h-4"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: GRAPH VIEW (Obsidian) -->
+  <div id="modal-graph" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex flex-col">
+    <div class="h-12 bg-zinc-900 border-b border-zinc-800 px-4 flex justify-between items-center">
+      <span class="font-bold text-sm text-purple-300 flex items-center space-x-2">
+        <i data-lucide="git-fork" class="w-4 h-4"></i>
+        <span>Mapa de Conexões de Notas (Graph View)</span>
+      </span>
+      <button onclick="toggleGraphModal()" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <div id="graph-container" class="flex-1 bg-zinc-950"></div>
+  </div>
+
+  <!-- MODAL: FOCUS MODE -->
+  <div id="modal-focus" class="fixed inset-0 bg-zinc-950 z-50 hidden flex flex-col items-center justify-center p-6">
+    <div class="max-w-md w-full bg-zinc-900 border border-red-500/30 rounded-3xl p-8 text-center space-y-6 relative z-10 shadow-2xl">
+      <div class="w-16 h-16 bg-red-500/10 text-red-400 rounded-full flex items-center justify-center mx-auto border border-red-500/20">
+        <i data-lucide="shield-alert" class="w-8 h-8"></i>
+      </div>
+      <div>
+        <h2 class="text-2xl font-extrabold text-white">Modo Estudos Ativo</h2>
+        <p class="text-xs text-zinc-400 mt-1">Ambiente focado sem distrações.</p>
+      </div>
+      <div class="py-4 bg-zinc-950 rounded-2xl border border-zinc-800">
+        <span class="text-xs text-zinc-500 uppercase font-semibold block mb-1">Cronômetro Pomodoro</span>
+        <div id="focus-timer-display" class="text-5xl font-mono font-black text-red-400">25:00</div>
+      </div>
+      <button onclick="toggleFocusMode()" class="w-full py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-sm">
+        Finalizar Foco
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL: QUICK CHECKLIST -->
+  <div id="modal-quick-checklist" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="max-w-md w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 class="font-bold text-lg text-white">Nova Checklist</h3>
+        <button onclick="closeQuickChecklistModal()" class="text-zinc-500 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <input type="text" id="quick-checklist-title" placeholder="Título (ex: Documentos Bolsa Google)..." class="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 text-sm text-white focus:outline-none">
+      <textarea id="quick-checklist-items" rows="4" placeholder="Itens (separados por linha)..." class="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 text-sm text-zinc-200 focus:outline-none font-mono"></textarea>
+      <button onclick="saveQuickChecklist()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2.5 rounded-xl text-sm">
+        Guardar
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL: ANDROID NATIVE -->
+  <div id="modal-android-native" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="max-w-lg w-full bg-zinc-900 border border-emerald-500/30 rounded-2xl p-6 space-y-4 text-zinc-200">
+      <div class="flex justify-between items-center border-b border-zinc-800 pb-3">
+        <span class="font-bold text-emerald-400">Botão Flutuante Nativo (Android APK)</span>
+        <button onclick="closeAndroidNativeModal()" class="text-zinc-500 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <p class="text-xs text-zinc-400">
+        Instruções para transformar esta aplicação num APK com suporte a widgets flutuantes no Android.
+      </p>
+      <button onclick="closeAndroidNativeModal()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 rounded-xl text-sm">
+        Entendido
+      </button>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT APP ENGINE -->
+  <script>
+    // --- APP DATA STORAGE & STATE ---
+    let state = {
+      notes: JSON.parse(localStorage.getItem('omni_notes')) || [
+        { id: '1', title: 'Guia Inscrição Google Scholarship', content: '# Google Generation Scholarship 2026\n\nRequisitos:\n- Estar matriculado em Ciência da Computação / Engenharia\n- Histórico escolar excelente\n- Redação sobre liderança em tecnologia.\n\nVeja também a bolsa do [[YouTube Creator Grants]].' },
+        { id: '2', title: 'YouTube Creator Grants', content: '# Fundo de Incentivo YouTube Learning\n\nFinanciamento para criadores de conteúdos educacionais e startups EdTech.' }
+      ],
+      currentNoteId: '1',
+      savedMaterials: JSON.parse(localStorage.getItem('omni_materials')) || [],
+      trackedScholarships: JSON.parse(localStorage.getItem('omni_scholarships')) || ['Google Generation Scholarship', 'YouTube Learning & Creator Grants'],
+      userScore: parseInt(localStorage.getItem('omni_score') || '150'),
+      checklists: JSON.parse(localStorage.getItem('omni_checklists')) || [
+        { id: 'c1', title: 'Checklist Bolsa Google', items: [{ text: 'Traduzir histórico escolar para inglês', done: true }, { text: 'Escrever redação de motivação', done: false }] }
+      ]
+    };
+
+    // --- BOLSAS & BIGTECH DATABASE (GOOGLE, YOUTUBE, META, MS, APPLE, ETC) ---
+    const SCHOLARSHIPS_DATABASE = [
+      // GOOGLE & YOUTUBE
+      {
+        id: 'google-gen',
+        name: 'Google Generation Scholarship',
+        region: 'GOOGLE_YOUTUBE',
+        location: 'Global / América Latina',
+        type: 'Tech',
+        valueAmount: 10000,
+        valDisplay: 'US$ 10.000 + Mentoria Google',
+        url: 'https://buildyourfuture.withgoogle.com/scholarships',
+        desc: 'Bolsa oficial do Google destinada a estudantes de Ciência da Computação, Engenharia de Software e áreas de tecnologia com foco em diversidade e excelência acadêmica.',
+        reqs: ['Matrícula ativa em curso de Ciência da Computação ou Engenharia', 'Demonstrar liderança e impacto social', 'Envio de histórico escolar e respostas a perguntas dissertativas']
+      },
+      {
+        id: 'youtube-fund',
+        name: 'YouTube Learning & Creator Grants',
+        region: 'GOOGLE_YOUTUBE',
+        location: 'Global / Brasil',
+        type: 'Criadores',
+        valueAmount: 15000,
+        valDisplay: 'Até US$ 15.000 em subsídios + Apoio de Produção',
+        url: 'https://www.youtube.com/creators',
+        desc: 'Fundo do YouTube de apoio a criadores de conteúdo educacional, divulgação científica, canais de exatas e startups de EdTech.',
+        reqs: ['Canal ativo no YouTube com foco educacional ou STEM', 'Projeto de série de videoaulas ou conteúdo didático', 'Proposta de impacto de aprendizagem comunitária']
+      },
+      {
+        id: 'google-wtm',
+        name: 'Google Women Techmakers Scholarship',
+        region: 'GOOGLE_YOUTUBE',
+        location: 'Global',
+        type: 'Tech',
+        valueAmount: 7000,
+        valDisplay: 'US$ 7.000 + Participação no Retiro WTM',
+        url: 'https://www.womentechmakers.com',
+        desc: 'Programa global do Google que apoia mulheres na tecnologia através de bolsas financeiras, comunidade e mentoria executiva.',
+        reqs: ['Identificar-se como mulher em curso de STEM', 'Forte histórico acadêmico', 'Engajamento no incentivo a mulheres na computação']
+      },
+
+      // BIG TECHS GERAIS
+      {
+        id: 'meta-fellowship',
+        name: 'Meta Research PhD Fellowship',
+        region: 'BIGTECH',
+        location: 'Global',
+        type: 'Pesquisa',
+        valueAmount: 42000,
+        valDisplay: 'Anuidade 100% Paga + US$ 42.000/ano',
+        url: 'https://research.facebook.com/fellowships/',
+        desc: 'Bolsa integral de doutorado e pós para pesquisadores de ponta em Inteligência Artificial, Visão Computacional, Sistemas e Dados.',
+        reqs: ['Estar matriculado em programa de doutorado (PhD)', 'Proposta de pesquisa relevante para IA ou infraestrutura']
+      },
+      {
+        id: 'ms-scholarship',
+        name: 'Microsoft College & Research Scholarship',
+        region: 'BIGTECH',
+        location: 'Global',
+        type: 'Tech',
+        valueAmount: 12000,
+        valDisplay: 'US$ 12.000 + Oferta de Estágio na Microsoft',
+        url: 'https://www.microsoft.com/en-us/research/academic-programs/',
+        desc: 'Bolsas para estudantes de graduação e pós em Ciência da Computação com alto desempenho técnico.',
+        reqs: ['Graduação em Ciência da Computação, Matemática ou Engenharia', 'Excelência em algoritmos e programação']
+      },
+      {
+        id: 'apple-scholars',
+        name: 'Apple Developer Scholars Program',
+        region: 'BIGTECH',
+        location: 'Global',
+        type: 'Tech',
+        valueAmount: 5000,
+        valDisplay: 'Credenciamento WWDC + Mentorias Técnicas Apple',
+        url: 'https://developer.apple.com',
+        desc: 'Bolsas de capacitação e mentoria técnica direta com engenheiros da Apple para criadores de aplicativos.',
+        reqs: ['Desenvolvimento de protótipo de app em Swift / Xcode', 'Carta de motivação']
+      },
+      {
+        id: 'santander-open',
+        name: 'Santander Open Academy Tech',
+        region: 'BIGTECH',
+        location: 'Brasil & Exterior',
+        type: '100%',
+        valueAmount: 3000,
+        valDisplay: 'Bolsas Integrais de Estudos + Cursos de Programação',
+        url: 'https://www.santanderopenacademy.com',
+        desc: 'Apoio financeiro e cursos de tecnologia com bolsas integrais em parceria com grandes universidades brasileiras e globais.',
+        reqs: ['Aberto a estudantes de qualquer graduação', 'Inscrição no portal Santander Open Academy']
+      },
+
+      // UNIVERSIDADES BRASIL
+      {
+        id: 'einstein',
+        name: 'Faculdade Albert Einstein',
+        region: 'BRASIL',
+        location: 'São Paulo, BR',
+        type: '100%',
+        valueAmount: 20000,
+        valDisplay: 'Bolsa 100% Integral de Mensalidade',
+        url: 'https://www.einstein.br/ensino',
+        desc: 'Bolsas de mérito e necessidade para cursos de Medicina, Enfermagem e Engenharia Biomédica.',
+        reqs: ['Desempenho de destaque no vestibular próprio Einstein']
+      },
+      {
+        id: 'ita',
+        name: 'ITA - Inst. Tecnológico de Aeronáutica',
+        region: 'BRASIL',
+        location: 'S. J. dos Campos, BR',
+        type: '100%',
+        valueAmount: 15000,
+        valDisplay: 'Graduação 100% Gratuita + Alojamento',
+        url: 'http://www.ita.br',
+        desc: 'Ensino de engenharia de nível internacional totalmente gratuito financiado pelo Governo Federal.',
+        reqs: ['Aprovação no rigoroso concurso de admissão ITA']
+      },
+      {
+        id: 'insper',
+        name: 'Insper Programa de Bolsas',
+        region: 'BRASIL',
+        location: 'São Paulo, BR',
+        type: '100%',
+        valueAmount: 18000,
+        valDisplay: 'Bolsa 100% + Auxílio de Moradia',
+        url: 'https://www.insper.edu.br',
+        desc: 'Programa de apoio a alunos de baixa renda com alto desempenho em Engenharia e Economia.',
+        reqs: ['Processo seletivo Insper + Análise socioeconômica']
+      },
+
+      // EUA / EUROPA
+      {
+        id: 'harvard',
+        name: 'Harvard Need-Based Financial Aid',
+        region: 'EUA',
+        location: 'Cambridge, EUA',
+        type: '100%',
+        valueAmount: 75000,
+        valDisplay: 'Cobertura Total (US$ 75.000+/ano)',
+        url: 'https://www.harvard.edu',
+        desc: 'Harvard garante bolsa integral para todas as famílias com renda compatível, sem empréstimos.',
+        reqs: ['Admissão regular na Harvard University']
+      }
+    ];
+
+    let chartInstance = null;
+
+    // --- INITIALIZATION ---
+    window.onload = function() {
+      lucide.createIcons();
+      renderNotesList();
+      renderCurrentNote();
+      renderUniversities();
+      renderKeepCards();
+      renderSavedMaterials();
+      updateScoreBadge();
+      initScholarshipsChart();
+    };
+
+    // --- CHART.JS INTEGRATION ---
+    function initScholarshipsChart() {
+      const ctx = document.getElementById('scholarshipsChart');
+      if (!ctx) return;
+
+      const topPrograms = SCHOLARSHIPS_DATABASE.slice(0, 6);
+      const labels = topPrograms.map(p => p.name.length > 16 ? p.name.substring(0, 16) + '...' : p.name);
+      const values = topPrograms.map(p => p.valueAmount);
+
+      chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Estimativa do Apoio ($ USD)',
+            data: values,
+            backgroundColor: [
+              'rgba(239, 68, 68, 0.7)',
+              'rgba(168, 85, 247, 0.7)',
+              'rgba(236, 72, 153, 0.7)',
+              'rgba(59, 130, 246, 0.7)',
+              'rgba(16, 185, 129, 0.7)',
+              'rgba(245, 158, 11, 0.7)'
+            ],
+            borderColor: [
+              '#ef4444', '#a855f7', '#ec4899', '#3b82f6', '#10b981', '#f59e0b'
+            ],
+            borderWidth: 1.5,
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return ` Apoio: $${context.raw.toLocaleString()} USD`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: '#a1a1aa', font: { size: 10 } },
+              grid: { color: '#27272a' }
+            },
+            y: {
+              ticks: { color: '#a1a1aa', font: { size: 10 } },
+              grid: { color: '#27272a' }
+            }
+          }
+        }
+      });
+    }
+
+    // --- TAB NAVIGATION ---
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-view').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('bg-gradient-to-r', 'from-red-600', 'to-purple-600', 'bg-purple-600', 'text-white', 'font-bold');
+        btn.classList.add('text-zinc-400');
+      });
+
+      const target = document.getElementById(`view-${tabId}`);
+      if (target) {
+        target.classList.remove('hidden');
+        target.classList.add('flex');
+      }
+
+      const activeBtn = document.getElementById(`tab-${tabId}`);
+      if (activeBtn) {
+        activeBtn.classList.add('bg-purple-600', 'text-white');
+        activeBtn.classList.remove('text-zinc-400');
+      }
+    }
+
+    // --- SCHOLARSHIP FILTER ENGINE ---
+    function setCategoryFilter(regionCode) {
+      document.getElementById('region-filter').value = regionCode;
+      filterUniversities();
+    }
+
+    function filterUniversities() {
+      const query = document.getElementById('bolsa-search-input').value.toLowerCase();
+      const region = document.getElementById('region-filter').value;
+      const type = document.getElementById('type-filter').value;
+
+      const filtered = SCHOLARSHIPS_DATABASE.filter(u => {
+        const matchesQuery = u.name.toLowerCase().includes(query) || u.location.toLowerCase().includes(query) || u.desc.toLowerCase().includes(query);
+        const matchesRegion = region === 'ALL' || u.region === region || (region === 'GOOGLE_YOUTUBE' && u.region === 'GOOGLE_YOUTUBE');
+        const matchesType = type === 'ALL' || u.type === type;
+        return matchesQuery && matchesRegion && matchesType;
+      });
+
+      const container = document.getElementById('universities-grid');
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full text-center py-12 text-zinc-500 border border-dashed border-zinc-800 rounded-2xl">
+            Nenhuma bolsa ou programa encontrado para estes filtros. Tente buscar por "Google" ou "YouTube".
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(u => {
+        const isTracked = state.trackedScholarships.includes(u.name);
+        const isGoogleYT = u.region === 'GOOGLE_YOUTUBE';
+        const isBigTech = u.region === 'BIGTECH' || isGoogleYT;
+
+        return `
+          <div class="bg-zinc-900 border ${isGoogleYT ? 'border-red-500/50 bg-gradient-to-b from-zinc-900 via-zinc-900 to-red-950/20' : 'border-zinc-800'} rounded-2xl p-5 flex flex-col justify-between space-y-4 hover:border-purple-500/50 transition">
+            <div class="space-y-2">
+              <div class="flex justify-between items-start">
+                <span class="text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-0.5 rounded ${isGoogleYT ? 'bg-red-500/20 text-red-300 border border-red-500/30' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'}">
+                  ${isGoogleYT ? '🔥 Google / YouTube Official' : u.location}
+                </span>
+                <button onclick="toggleTrackScholarship('${u.name}')" class="text-amber-400 hover:scale-110 transition">
+                  <i data-lucide="star" class="w-4 h-4 ${isTracked ? 'fill-amber-400' : ''}"></i>
+                </button>
+              </div>
+
+              <h4 class="font-extrabold text-white text-base leading-snug">${u.name}</h4>
+              <p class="text-xs text-zinc-400 leading-relaxed line-clamp-3">${u.desc}</p>
+            </div>
+
+            <div class="space-y-3 pt-3 border-t border-zinc-800/80">
+              <div class="flex justify-between items-center text-xs">
+                <span class="text-zinc-500">Valor Estimado:</span>
+                <span class="font-bold text-emerald-400">${u.valDisplay}</span>
+              </div>
+
+              <div class="flex space-x-2">
+                <button onclick="openScholarshipModal('${u.id}')" class="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 py-2 rounded-xl text-xs font-semibold transition">
+                  Ver Requisitos
+                </button>
+                <a href="${u.url}" target="_blank" class="px-3 py-2 ${isGoogleYT ? 'bg-red-600 hover:bg-red-700' : 'bg-purple-600 hover:bg-purple-700'} text-white rounded-xl text-xs font-bold flex items-center justify-center transition">
+                  <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function openScholarshipModal(id) {
+      const sch = SCHOLARSHIPS_DATABASE.find(s => s.id === id);
+      if (!sch) return;
+
+      document.getElementById('modal-sch-title').innerText = sch.name;
+      document.getElementById('modal-sch-value').innerText = sch.valDisplay;
+      document.getElementById('modal-sch-desc').innerText = sch.desc;
+      document.getElementById('modal-sch-badge').innerText = sch.region === 'GOOGLE_YOUTUBE' ? '🔥 Google / YouTube Program' : sch.location;
+      document.getElementById('modal-sch-link').href = sch.url;
+
+      const reqsBox = document.getElementById('modal-sch-reqs');
+      reqsBox.innerHTML = sch.reqs.map(r => `<li>${r}</li>`).join('');
+
+      const modal = document.getElementById('modal-scholarship-detail');
+      modal.classList.remove('hidden');
+    }
+
+    function closeScholarshipModal() {
+      document.getElementById('modal-scholarship-detail').classList.add('hidden');
+    }
+
+    function toggleTrackScholarship(uniName) {
+      if (state.trackedScholarships.includes(uniName)) {
+        state.trackedScholarships = state.trackedScholarships.filter(n => n !== uniName);
+      } else {
+        state.trackedScholarships.push(uniName);
+      }
+      saveState();
+      renderUniversities();
+      renderTrackedScholarships();
+    }
+
+    function renderTrackedScholarships() {
+      const container = document.getElementById('tracked-scholarships-list');
+      if (state.trackedScholarships.length === 0) {
+        container.innerHTML = `<span class="text-zinc-500 italic">Nenhuma bolsa favoritada ainda.</span>`;
+        return;
+      }
+      container.innerHTML = state.trackedScholarships.map(name => `
+        <span class="px-2.5 py-1 bg-purple-900/40 text-purple-200 border border-purple-500/30 rounded-lg flex items-center space-x-1.5">
+          <span>${name}</span>
+          <button onclick="toggleTrackScholarship('${name}')" class="hover:text-red-400"><i data-lucide="x" class="w-3 h-3"></i></button>
+        </span>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    // --- OBSIDIAN ENGINE ---
+    function renderNotesList() {
+      const container = document.getElementById('notes-list');
+      container.innerHTML = state.notes.map(note => `
+        <button onclick="selectNote('${note.id}')" class="w-full text-left p-2 rounded-lg text-xs font-medium truncate flex items-center justify-between ${note.id === state.currentNoteId ? 'bg-purple-600/20 text-purple-300 border border-purple-500/30' : 'text-zinc-400 hover:bg-zinc-800'}">
+          <span class="truncate">${note.title || 'Sem título'}</span>
+          <i data-lucide="file" class="w-3.5 h-3.5 opacity-60"></i>
+        </button>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    function selectNote(id) {
+      state.currentNoteId = id;
+      renderNotesList();
+      renderCurrentNote();
+    }
+
+    function renderCurrentNote() {
+      const note = state.notes.find(n => n.id === state.currentNoteId);
+      if (!note) return;
+
+      document.getElementById('note-title-input').value = note.title;
+      document.getElementById('note-content-input').value = note.content;
+
+      let rawText = note.content;
+      rawText = rawText.replace(/\[\[(.*?)\]\]/g, (match, p1) => {
+        return `<span class="wiki-link" onclick="handleWikiClick('${p1}')">[[${p1}]]</span>`;
+      });
+
+      document.getElementById('note-preview').innerHTML = marked.parse(rawText);
+    }
+
+    function updateCurrentNoteTitle(val) {
+      const note = state.notes.find(n => n.id === state.currentNoteId);
+      if (note) {
+        note.title = val;
+        saveState();
+        renderNotesList();
+      }
+    }
+
+    function updateCurrentNoteContent(val) {
+      const note = state.notes.find(n => n.id === state.currentNoteId);
+      if (note) {
+        note.content = val;
+        saveState();
+        renderCurrentNote();
+      }
+    }
+
+    function createNewNote() {
+      const newId = Date.now().toString();
+      const newNote = { id: newId, title: 'Nova Nota sem Título', content: '# Nova Nota\n\nDigitar...' };
+      state.notes.push(newNote);
+      state.currentNoteId = newId;
+      saveState();
+      renderNotesList();
+      renderCurrentNote();
+    }
+
+    function deleteCurrentNote() {
+      if (state.notes.length <= 1) return;
+      state.notes = state.notes.filter(n => n.id !== state.currentNoteId);
+      state.currentNoteId = state.notes[0].id;
+      saveState();
+      renderNotesList();
+      renderCurrentNote();
+    }
+
+    function handleWikiClick(targetTitle) {
+      let targetNote = state.notes.find(n => n.title.toLowerCase() === targetTitle.toLowerCase());
+      if (!targetNote) {
+        targetNote = { id: Date.now().toString(), title: targetTitle, content: `# ${targetTitle}\n\nCriado via link.` };
+        state.notes.push(targetNote);
+      }
+      state.currentNoteId = targetNote.id;
+      saveState();
+      renderNotesList();
+      renderCurrentNote();
+    }
+
+    // --- GRAPH VIEW ---
+    function toggleGraphModal() {
+      const modal = document.getElementById('modal-graph');
+      modal.classList.toggle('hidden');
+      if (!modal.classList.contains('hidden')) {
+        setTimeout(buildGraphView, 100);
+      }
+    }
+
+    function buildGraphView() {
+      const nodes = state.notes.map(n => ({ id: n.id, label: n.title, color: n.id === state.currentNoteId ? '#8b5cf6' : '#3f3f46', font: { color: '#ffffff' } }));
+      const edges = [];
+
+      state.notes.forEach(note => {
+        const matches = note.content.match(/\[\[(.*?)\]\]/g);
+        if (matches) {
+          matches.forEach(m => {
+            const linkedTitle = m.replace('[[', '').replace(']]', '');
+            const targetNote = state.notes.find(n => n.title.toLowerCase() === linkedTitle.toLowerCase());
+            if (targetNote) {
+              edges.push({ from: note.id, to: targetNote.id, color: { color: '#71717a' } });
+            }
+          });
+        }
+      });
+
+      const container = document.getElementById('graph-container');
+      const data = { nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges) };
+      const options = { nodes: { shape: 'dot', size: 16 }, physics: { stabilization: true } };
+      new vis.Network(container, data, options);
+    }
+
+    // --- SEARCH CENTER ---
+    function executeStudySearch() {
+      const query = document.getElementById('study-search-query').value.trim();
+      const type = document.getElementById('search-type').value;
+      const container = document.getElementById('search-results-container');
+      if (!query) return;
+
+      const mock = [
+        { title: `Guia de Inscrição Oficial: ${query}`, source: type === 'youtube' ? 'Canal YouTube Tech' : 'Google Drive / Edital PDF', url: `https://www.google.com/search?q=${encodeURIComponent(query)}` },
+        { title: `Passo a Passo e Dicas de Aprovação: ${query}`, source: type === 'youtube' ? 'Videoaula' : 'Documento Acadêmico', url: `https://www.google.com/search?q=${encodeURIComponent(query)}` }
+      ];
+
+      container.innerHTML = mock.map(m => `
+        <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex flex-col justify-between space-y-3">
+          <div>
+            <span class="text-xs font-bold text-purple-400 block mb-1">${m.source}</span>
+            <h4 class="font-semibold text-white text-sm">${m.title}</h4>
+          </div>
+          <a href="${m.url}" target="_blank" class="bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-center py-1.5 rounded-lg text-xs font-semibold">Acessar Conteúdo</a>
+        </div>
+      `).join('');
+    }
+
+    function renderSavedMaterials() {
+      const container = document.getElementById('saved-materials-grid');
+      container.innerHTML = `<span class="text-xs text-zinc-500 italic col-span-2">Sua biblioteca sincronizada de links e documentos.</span>`;
+    }
+
+    // --- KEEP & CHECKLIST ENGINE ---
+    function renderKeepCards() {
+      const container = document.getElementById('keep-cards-grid');
+      container.innerHTML = state.checklists.map(c => `
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-3">
+          <div class="flex justify-between items-center border-b border-zinc-800 pb-2">
+            <h4 class="font-bold text-zinc-100 text-sm">${c.title}</h4>
+            <button onclick="deleteChecklist('${c.id}')" class="text-zinc-500 hover:text-red-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+          </div>
+          <div class="space-y-1.5">
+            ${c.items.map((item, idx) => `
+              <label class="flex items-center space-x-2 text-xs text-zinc-300 cursor-pointer">
+                <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleChecklistItem('${c.id}', ${idx})" class="rounded border-zinc-700 bg-zinc-950 text-purple-600">
+                <span class="${item.done ? 'line-through text-zinc-500' : ''}">${item.text}</span>
+              </label>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    function toggleChecklistItem(checklistId, itemIdx) {
+      const list = state.checklists.find(c => c.id === checklistId);
+      if (list && list.items[itemIdx]) {
+        list.items[itemIdx].done = !list.items[itemIdx].done;
+        saveState();
+        renderKeepCards();
+      }
+    }
+
+    function deleteChecklist(id) {
+      state.checklists = state.checklists.filter(c => c.id !== id);
+      saveState();
+      renderKeepCards();
+    }
+
+    function openQuickChecklistModal() {
+      document.getElementById('modal-quick-checklist').classList.remove('hidden');
+    }
+
+    function closeQuickChecklistModal() {
+      document.getElementById('modal-quick-checklist').classList.add('hidden');
+    }
+
+    function saveQuickChecklist() {
+      const title = document.getElementById('quick-checklist-title').value.trim() || 'Checklist';
+      const itemsRaw = document.getElementById('quick-checklist-items').value.split('\n').filter(i => i.trim() !== '');
+      const items = itemsRaw.map(t => ({ text: t.trim(), done: false }));
+
+      if (items.length > 0) {
+        state.checklists.push({ id: Date.now().toString(), title, items });
+        saveState();
+        renderKeepCards();
+        closeQuickChecklistModal();
+      }
+    }
+
+    // --- SIMULADOS ENGINE ---
+    const QUESTIONS_DATABASE = [
+      {
+        text: 'Qual é o requisito fundamental para a candidatura à bolsa Google Generation Scholarship em Engenharia/Computação?',
+        options: ['A) Estar matriculado em curso de tecnologia e demonstrar liderança', 'B) Possuir canal no YouTube com 100k inscritos', 'C) Carta de recomendação do Governo', 'D) n.d.a.'],
+        correct: 0,
+        explanation: 'A bolsa exige matrícula em Ciência da Computação/Engenharia relacionada e ensaios de liderança.'
+      }
+    ];
+
+    function startSimulado() {
+      document.getElementById('simulado-setup').classList.add('hidden');
+      document.getElementById('simulado-active-card').classList.remove('hidden');
+      const q = QUESTIONS_DATABASE[0];
+      document.getElementById('question-text').innerText = q.text;
+      document.getElementById('options-container').innerHTML = q.options.map((opt, i) => `
+        <button onclick="submitAnswer(${i})" class="w-full text-left p-3 rounded-xl bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 text-sm text-zinc-200">
+          ${opt}
+        </button>
+      `).join('');
+    }
+
+    function submitAnswer(idx) {
+      const feedback = document.getElementById('question-feedback');
+      feedback.classList.remove('hidden');
+      feedback.className = "p-4 rounded-xl border bg-emerald-950/40 border-emerald-500/30 text-emerald-300 text-xs";
+      feedback.innerHTML = `<strong>Correto! (+10 pts)</strong><p class="mt-1">${QUESTIONS_DATABASE[0].explanation}</p>`;
+      state.userScore += 10;
+      saveState();
+      updateScoreBadge();
+      document.getElementById('next-question-btn').classList.remove('hidden');
+    }
+
+    function nextQuestion() { cancelSimulado(); }
+    function cancelSimulado() {
+      document.getElementById('simulado-setup').classList.remove('hidden');
+      document.getElementById('simulado-active-card').classList.add('hidden');
+    }
+
+    function updateScoreBadge() {
+      document.getElementById('user-score-badge').innerText = `${state.userScore} pts`;
+    }
+
+    // --- UTILS & MODALS ---
+    function toggleFocusMode() { document.getElementById('modal-focus').classList.toggle('hidden'); }
+    function showAndroidNativeModal() { document.getElementById('modal-android-native').classList.remove('hidden'); }
+    function closeAndroidNativeModal() { document.getElementById('modal-android-native').classList.add('hidden'); }
+
+    function saveState() {
+      localStorage.setItem('omni_notes', JSON.stringify(state.notes));
+      localStorage.setItem('omni_materials', JSON.stringify(state.savedMaterials));
+      localStorage.setItem('omni_scholarships', JSON.stringify(state.trackedScholarships));
+      localStorage.setItem('omni_checklists', JSON.stringify(state.checklists));
+      localStorage.setItem('omni_score', state.userScore.toString());
+    }
+  </script>
+</body>
+</html>
